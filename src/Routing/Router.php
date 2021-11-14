@@ -28,7 +28,7 @@ class Router {
       } else if ($handler = $this->matchPathVar($path, $this->routes[$requestMethod])) {
         $handler();
       } else {
-        Errors::notFound();
+        Errors::notFound("Path not found");
       }
     } else {
       Errors::methodNotAllowed();

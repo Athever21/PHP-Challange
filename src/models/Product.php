@@ -5,7 +5,7 @@ namespace App\Models;
 class Product implements \JsonSerializable {
   private int $id;
   private string $name;
-  private int $category;
+  private $category;
   private string $sku;
   private float $price;
   private int $quantity;

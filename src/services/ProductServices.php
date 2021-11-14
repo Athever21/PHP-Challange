@@ -5,13 +5,15 @@ namespace App\Services;
 use App\Models\Product;
 use PDO;
 use App\Db\DB;
+use App\Errors\Errors;
 
 class ProductServices {
   public static function getAllProdcuts($db) {
-    $data = $db->query("SELECT * FROM products")->fetchAll();
+    $qry = "SELECT products.id, products.product_name,categories.category_name, products.SKU, products.price,products.quantity FROM products INNER JOIN categories ON categories.id = products.category_id";
+    $data = $db->query($qry)->fetchAll(PDO::FETCH_ASSOC);
     $arr = [];
     foreach ($data as $row) {
-      array_push($arr,new Product($row[0],$row[1],$row[2],$row[3],$row[4],$row[5]));
+      array_push($arr, $row);
     }
       
     header("Content-type: application/json");
@@ -22,7 +24,12 @@ class ProductServices {
     $stmt = $db->prepare("SELECT * FROM products WHERE id = ?");
     $stmt->execute([$_REQUEST['PATH_VARS']['id']]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
+    if (!$row) {
+      Errors::notFound("Product not found");
+      return;
+    }
+
     header("Content-type: application/json");
     echo json_encode($row);
   }
