@@ -12,6 +12,8 @@
     "process-timeout": 0
   },
   "require": {
-    "vlucas/phpdotenv": "^5.3"
+    "vlucas/phpdotenv": "^5.4",
+    "ext-pdo": "*",
+    "php-kit/ext-pdo": "^1.1"
   }
 }
