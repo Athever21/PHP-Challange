@@ -20,4 +20,10 @@ class Errors {
     http_response_code(400);
     echo json_encode(["error" => $message]);
   }
+
+  public static function unauthorized(string $message) {
+    header('Content-Type: application/json');
+    http_response_code(401);
+    echo json_encode(["error" => $message]);
+  }
 }

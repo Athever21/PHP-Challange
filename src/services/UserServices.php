@@ -51,4 +51,5 @@ class UserServices {
     $user->save($db);
     echo json_encode($user);
   }
+
 }

@@ -1,6 +1,6 @@
 <?php 
 
-namespace App\Routing;
+namespace App\Routing\Routes;
 
 use App\Db\DB;
 use App\Services\CategoryServices;
