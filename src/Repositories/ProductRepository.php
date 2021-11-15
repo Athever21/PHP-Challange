@@ -30,7 +30,6 @@ class ProductRepository {
   public static function saveProduct($db, Product $product) {
     if ($product->getId() == 0) {
       $id = CategoryRepository::getOrCreateCategory($db, $product->getCategory());
-      var_dump($id);
       $stmt = $db->prepare("INSERT INTO products(product_name, category_id, SKU, price, quantity) VALUES (?, ?, ?, ?, ?)");
       $stmt->execute([$product->getName(), $id, $product->getSku(), $product->getPrice(), $product->getQuantity()]);
       $product->setId($db->lastInsertId());

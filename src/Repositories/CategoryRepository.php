@@ -10,7 +10,7 @@ class CategoryRepository {
     $data = $db->query("SELECT * FROM categories")->fetchAll(PDO::FETCH_ASSOC);
     $arr = [];
     foreach ($data as $row) {
-      array_push($arr, $row);
+      array_push($arr, new Category($row['id'], $row['category_name']));
     }
     return $arr;
   }
@@ -25,6 +25,35 @@ class CategoryRepository {
     }
     
     return new Category($row['id'], $row['category_name']);
+  }
+
+  public static function categoryExists($db, string $name) {
+    $stmt = $db->prepare("SELECT * FROM categories WHERE category_name = ?");
+    $stmt->execute([$name]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$row) {
+      return false;
+    }
+    
+    return true;
+  }
+
+  public static function saveCategory($db, Category $category) {
+    if ($category->getId() == 0) {
+      $stmt = $db->prepare("INSERT INTO categories(category_name) VALUES (?)");
+      $stmt->execute([$category->getName()]);
+      $category->setId($db->lastInsertId());
+    } else {
+      $stmt = $db->prepare("UPDATE categories SET category_name = ? WHERE id = ? ");
+      $stmt->execute([$category->getName(), $category->getId()]);
+    }
+  }
+
+  public static function deleteCategory($db, int $id) {
+    $stmt = 'DELETE FROM categories WHERE id = ?';
+    $result = $db->prepare($stmt);
+    $result->execute([$id]);
   }
 
   public static function getOrCreateCategory($db, string $category) {
