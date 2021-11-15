@@ -10,12 +10,27 @@ class UserRoutes {
   public static function set($router) {
     $db = new DB();
 
+    $router->addMiddleware("/users/:id", function () use ($db) {
+      if ($_SERVER["REQUEST_METHOD"] != "POST") {
+        UserServices::getUserFromPath($db);
+      }
+      LoginServices::getAuthUser($db);
+    });
+
     $router->addRoute("GET", "/users", function () use ($db) {
       UserServices::getAllUsers($db);
     });
 
     $router->addRoute("GET", "/users/:id", function () use ($db) {
       UserServices::getUser($db);
+    });
+
+    $router->addRoute("PUT", "/users/:id", function () use ($db) {
+      UserServices::changeUser($db);
+    });
+
+    $router->addRoute("DELETE", "/users/:id", function () use ($db) {
+      UserServices::deleteUser($db);
     });
 
     $router->addRoute("POST", "/users", function () use ($db) {

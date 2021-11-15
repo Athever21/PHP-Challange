@@ -26,4 +26,10 @@ class Errors {
     http_response_code(401);
     echo json_encode(["error" => $message]);
   }
+
+  public static function forbidden(string $message) {
+    header('Content-Type: application/json');
+    http_response_code(403);
+    echo json_encode(["error" => $message]);
+  }
 }

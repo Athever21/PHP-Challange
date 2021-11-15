@@ -3,19 +3,18 @@
 namespace App\Services;
 
 use App\Errors\Errors;
-use App\Models\User;
+use App\Repositories\UserRepository;
 
 class LoginServices {
   public static function loginUser($db) {
-    header("Content-type: application/json");
-    $data = json_decode(file_get_contents("php://input"));
+    $data = $_REQUEST['body'];
 
     if (!isset($data->username) || !isset($data->password)) {
       Errors::badRequest("Missing fields");
       return;
     }
 
-    $user = User::findByUsername($db, $data->username);
+    $user = UserRepository::findByUsername($db, $data->username);
 
     if (!$user || !password_verify($data->password, $user->getPassword())) {
       Errors::badRequest("Invalid username or password");
@@ -30,7 +29,6 @@ class LoginServices {
   }
 
   public static function refreshToken($db) {
-    header("Content-type: application/json");
     if (!isset($_COOKIE['refresh_token'])) {
       Errors::badRequest("Refersh cookie not present");
       return;
@@ -43,7 +41,7 @@ class LoginServices {
       return;
     }
 
-    $user = User::findById($db, $token_data->userId);
+    $user = UserRepository::findById($db, $token_data->userId);
 
     if (!$user) {
       Errors::notFound("User not found");
@@ -55,9 +53,22 @@ class LoginServices {
   }
 
   public static function logoutUser() {
-    header("Content-type: application/json");
-
     setcookie("refresh_token", "", ["expires" => 0, "httponly" => true, "samesite" => true]);
     echo json_encode(["status" => "logged out"]);
+  }
+
+  public static function getAuthUser($db) {
+    if (isset(getallheaders()['Authorization'])) {
+      $auth = getallheaders()['Authorization'];
+      if (str_starts_with($auth, "Bearer ")) {
+        $data = JWTService::getDataFromToken(substr($auth, 7), false);
+        if ($data) {
+          $user = UserRepository::findById($db, $data->userId);
+          if ($user) {
+            $_REQUEST["userAuth"] = $user;
+          }
+        } 
+      } 
+    }
   }
 }

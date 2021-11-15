@@ -24,51 +24,39 @@ class User implements \JsonSerializable {
     return $vars;
   }
 
-  public function save(DB $db) {
-    if ($this->id == 0) {
-      $qry = "INSERT INTO users(username, pass, email) VALUES (?,?,?)";
-      $stmt = $db->prepare($qry);
-      $stmt->execute([$this->username, $this->pass, $this->email]);
-      $this->id = $db->lastInsertId();
-    }
-  }
-
   public function getId() : int {
     return $this->id;
+  }
+
+  public function getUsername() : string {
+    return $this->username;
   }
 
   public function getPassword() : string {
     return $this->pass;
   }
 
+  public function getEmail() : string {
+    return $this->email;
+  }
+
+  public function setId(int $id) {
+    $this->id = $id;
+  }
+
+  public function setUsername(string $username) {
+    $this->username = $username;
+  }
+
+  public function setPassword(string $password) {
+    $this->password = User::hashPassword($password);
+  }
+
+  public function setEmail(string $email) {
+    $this->email = $email;
+  }
+
   public static function hashPassword(string $pass) : string {
     return password_hash($pass, PASSWORD_ARGON2I, ['memory_cost' => 2048, 'time_cost' => 4, 'threads' => 3]);
-  }
-
-  public static function usernameInUse(DB $db, string $username): bool {
-    $qry = 'SELECT COUNT(*) FROM users WHERE username = ?';
-    $result = $db->prepare($qry);
-    $result->execute([$username]);
-    return $result->fetchColumn();
-  }
-
-  public static function findByUsername(DB $db, string $username): User | bool {
-    $qry = 'SELECT * FROM users WHERE username = ?';
-    $result = $db->prepare($qry);
-    $result->execute([$username]);
-    return User::returnUser($result);
-  }
-
-  public static function findById(DB $db, string $username): User | bool {
-    $qry = 'SELECT * FROM users WHERE id = ?';
-    $result = $db->prepare($qry);
-    $result->execute([$username]);
-    return User::returnUser($result);
-  }
-
-  private static function returnUser(PDOStatement $result): User | bool {
-    $row = $result->fetch();
-    if (!$row) return false;
-    return new User($row[0], $row[1], $row[2], $row[3]);
   }
 }

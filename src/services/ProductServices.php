@@ -16,7 +16,6 @@ class ProductServices {
       array_push($arr, $row);
     }
       
-    header("Content-type: application/json");
     echo json_encode($arr);
   }
 
@@ -29,8 +28,7 @@ class ProductServices {
       Errors::notFound("Product not found");
       return;
     }
-
-    header("Content-type: application/json");
+    
     echo json_encode($row);
   }
 }

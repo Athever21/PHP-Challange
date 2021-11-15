@@ -2,54 +2,94 @@
 
 namespace App\Services;
 
-use App\Errors\Errors;
-use PDO;
+use App\Errors\Errors;;
 use App\Models\User;
+use App\Repositories\UserRepository;
 
 class UserServices {
   public static function getAllUsers($db) {
-    $data = $db->query("SELECT * FROM users")->fetchAll();
-    $arr = [];
-    foreach ($data as $row) {
-      array_push($arr,new User($row[0],$row[1], $row[2], $row[3]));
-    }
-      
-    header("Content-type: application/json");
-    echo json_encode($arr);
+    echo json_encode(UserRepository::getAllUsers($db));
   }
 
   public static function getUser($db) {
-    $stmt = $db->prepare("SELECT * FROM users WHERE id = ?");
-    $stmt->execute([$_REQUEST['PATH_VARS']['id']]);
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if (!$row) {
-      Errors::notFound("User not found");
-      return;
-    }
-
-    unset($row['pass']);
-    header("Content-type: application/json");
-    echo json_encode($row);
+    echo isset($_REQUEST['userPath']) ? json_encode($_REQUEST['userPath']) : "";
   }
 
   public static function createUser($db) {
-    header("Content-type: application/json");
-    $data = json_decode(file_get_contents("php://input"));
+    $data = $_REQUEST['body'];
 
     if (!isset($data->username) || !isset($data->password) || !isset($data->email)) {
       Errors::badRequest("Missing fields");
       return;
     }
 
-    if (User::usernameInUse($db, $data->username)) {
+    if (UserRepository::usernameInUse($db, $data->username)) {
       Errors::badRequest("Username already in use");
       return;
     }
 
     $user = new User(0, $data->username, User::hashPassword($data->password), $data->email);
-    $user->save($db);
+    UserRepository::saveUser($db, $user);
     echo json_encode($user);
   }
 
+  public static function getUserFromPath($db) {
+    $user = UserRepository::findById($db, $_REQUEST['PATH_VARS']['id']);
+
+    if (!$user) {
+      Errors::notFound("User not found");
+      exit();
+    }
+
+    $_REQUEST['userPath'] = $user;
+  }
+
+  public static function confirmUser() {
+    if (!isset($_REQUEST['userAuth'])) {
+      Errors::unauthorized("Invalid token");
+      exit();
+    }
+
+    if ($_REQUEST['userAuth']->getId() != $_REQUEST['userPath']->getId()) {
+      Errors::forbidden("forbidden");
+      exit();
+    }
+  }
+
+  public static function changeUser($db) {
+    UserServices::confirmUser();
+
+    $pathU = $_REQUEST['userPath'];
+    $data = $_REQUEST['body'];
+
+    if ($data == null) {
+      Errors::badRequest("request body empty");
+      exit();
+    }
+
+    if (isset($data->username)) {
+      if (UserRepository::usernameInUse($db, $data->username)) {
+        Errors::badRequest("Username already in use");
+        exit();
+      }
+      $pathU->setUsername($data->username);
+    }
+    if (isset($data->pasword)) {
+      $pathU->setPasword($data->pasword);
+    }
+    if (isset($data->email)) {
+      $pathU->setEmail($data->email);
+    }
+
+    UserRepository::saveUser($db, $pathU);
+
+    echo json_encode($pathU);
+  }
+
+  public static function deleteUser($db) {
+    UserServices::confirmUser();
+    UserRepository::deleteUser($db, $_REQUEST['userPath']->getId());
+
+    echo json_encode(["status" => "deleted"]);
+  }
 }

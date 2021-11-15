@@ -14,7 +14,6 @@ class CategoryServices {
       array_push($arr, $row);
     }
       
-    header("Content-type: application/json");
     echo json_encode($arr);
   }
 
@@ -28,7 +27,6 @@ class CategoryServices {
       return;
     }
 
-    header("Content-type: application/json");
     echo json_encode($row);
   }
 }

@@ -24,8 +24,10 @@ class Router {
 
     if (array_key_exists($requestMethod, $this->routes)) {
       if (array_key_exists($path, $this->routes[$requestMethod])) {
+        $this->dispatchMiddleware($path);
         $this->routes[$requestMethod][$path]();
       } else if ($handler = $this->matchPathVar($path, $this->routes[$requestMethod])) {
+        $this->dispatchMiddleware($path);
         $handler();
       } else {
         Errors::notFound("Path not found");
@@ -82,5 +84,25 @@ class Router {
     }
 
     return null;
+  }
+
+  private function dispatchMiddleware(string $path) {
+    $pArr = explode("/", $path);
+    foreach (array_keys($this->middlewares) as $m) {
+      $mArr = explode("/", $m);
+      $flag = true;
+      for ($i = 0; $i < count($mArr); $i++) {
+        if ($mArr[$i] == "*") break;
+        if (!isset($pArr[$i])) {
+          $flag = false;
+          break;
+        };
+        if ($pArr[$i] != $mArr[$i] && $mArr[$i][0] != ":") {
+          $flag = false;
+          break;
+        };
+      }
+      if ($flag) $this->middlewares[$m]();
+    }
   }
 }
