@@ -9,17 +9,11 @@ class LoginServices {
   public static function loginUser($db) {
     $data = $_REQUEST['body'];
 
-    if (!isset($data->username) || !isset($data->password)) {
-      Errors::badRequest("Missing fields");
-      return;
-    }
+    if (!isset($data->username) || !isset($data->password)) Errors::badRequest("Missing fields");
 
     $user = UserRepository::findByUsername($db, $data->username);
 
-    if (!$user || !password_verify($data->password, $user->getPassword())) {
-      Errors::badRequest("Invalid username or password");
-      return;
-    }
+    if (!$user || !password_verify($data->password, $user->getPassword())) Errors::badRequest("Invalid username or password");
     
     $token = JWTService::genrateToken($user->getId(),false);
     $tokenRefresh = JWTService::genrateToken($user->getId(),true);
@@ -36,17 +30,11 @@ class LoginServices {
 
     $token_data = JWTService::getDataFromToken($_COOKIE['refresh_token'], true);
     
-    if (!$token_data) {
-      Errors::unauthorized("Invalid token");
-      return;
-    }
+    if (!$token_data) Errors::unauthorized("Invalid token");
 
     $user = UserRepository::findById($db, $token_data->userId);
 
-    if (!$user) {
-      Errors::notFound("User not found");
-      return;
-    }
+    if (!$user) Errors::notFound("User not found");
 
     $token = JWTService::genrateToken($user->getId(),false);
     echo json_encode(["token" => $token, "user" => $user]);

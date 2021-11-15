@@ -18,15 +18,9 @@ class UserServices {
   public static function createUser($db) {
     $data = $_REQUEST['body'];
 
-    if (!isset($data->username) || !isset($data->password) || !isset($data->email)) {
-      Errors::badRequest("Missing fields");
-      return;
-    }
+    if (!isset($data->username) || !isset($data->password) || !isset($data->email)) Errors::badRequest("Missing fields");
 
-    if (UserRepository::usernameInUse($db, $data->username)) {
-      Errors::badRequest("Username already in use");
-      return;
-    }
+    if (UserRepository::usernameInUse($db, $data->username)) Errors::badRequest("Username already in use");
 
     $user = new User(0, $data->username, User::hashPassword($data->password), $data->email);
     UserRepository::saveUser($db, $user);
@@ -36,24 +30,15 @@ class UserServices {
   public static function getUserFromPath($db) {
     $user = UserRepository::findById($db, $_REQUEST['PATH_VARS']['id']);
 
-    if (!$user) {
-      Errors::notFound("User not found");
-      exit();
-    }
+    if (!$user) Errors::notFound("User not found");
 
     $_REQUEST['userPath'] = $user;
   }
 
   public static function confirmUser() {
-    if (!isset($_REQUEST['userAuth'])) {
-      Errors::unauthorized("Invalid token");
-      exit();
-    }
+    if (!isset($_REQUEST['userAuth'])) Errors::unauthorized("Invalid token");
 
-    if ($_REQUEST['userAuth']->getId() != $_REQUEST['userPath']->getId()) {
-      Errors::forbidden("forbidden");
-      exit();
-    }
+    if ($_REQUEST['userAuth']->getId() != $_REQUEST['userPath']->getId()) Errors::forbidden("forbidden");
   }
 
   public static function changeUser($db) {
@@ -62,16 +47,10 @@ class UserServices {
     $pathU = $_REQUEST['userPath'];
     $data = $_REQUEST['body'];
 
-    if ($data == null) {
-      Errors::badRequest("request body empty");
-      exit();
-    }
+    if ($data == null) Errors::badRequest("request body empty");
 
     if (isset($data->username)) {
-      if (UserRepository::usernameInUse($db, $data->username)) {
-        Errors::badRequest("Username already in use");
-        exit();
-      }
+      if (UserRepository::usernameInUse($db, $data->username)) Errors::badRequest("Username already in use");
       $pathU->setUsername($data->username);
     }
     if (isset($data->pasword)) {
